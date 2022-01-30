@@ -17,3 +17,10 @@ Or run the App directly in the pipenv:
 
 ## Development Requirements
 * pipenv
+
+## Notes
+
+* Alternative UI libraries:
+  - https://bootstrap-vue.org/docs
+  - https://quasar.dev/start/umd
+* Site to help you chose a MVC framework: https://todomvc.com/

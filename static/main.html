@@ -24,10 +24,11 @@
     <div id="app">
         <v-app>
             <v-app-bar app>
+                <a href="/">
                 <h1>share_teach_learn <v-icon>mdi-share-variant </v-icon>
                     <v-icon>mdi-bulletin-board</v-icon>
                     <v-icon>mdi-school</v-icon>
-                </h1>
+                </h1></a>
             </v-app-bar>
             <v-main>
                 <v-container>
@@ -39,7 +40,7 @@
                         prepend-icon="mdi-filter-variant" solo>
                         <template v-slot:selection="{ attrs, item, select, selected }">
                             <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                @click:close="remove(item)">
+                                @click:close="removeCategory(item)">
                                 {{ item }}
                             </v-chip>
                         </template>
@@ -58,18 +59,19 @@
                             v-bind:key="file.id"
                             v-if="file.description.includes(searchText) || file.filename.includes(searchText)">
                             <v-card-text>
-                                <div> <img :src="file.preview" width="300" height="300"> </div>
-                                <p class="text-h5 text--primary">
+                                <v-img class="mx-auto" :src="file.preview" width="300" height="300"></v-img>
+                                <div class="text-h6 text--primary pt-3">
                                     {{ file.filename }}
-                                </p>
-                                <div class="text--primary">
-                                    {{ file.description }}
                                 </div>
-                                <div class="mt-auto">
-                                    <v-chip v-for="c in file.categories" v-bind:key="c" small >{{ c }}</v-chip>
+                                <div class="text--primary pt-3">
+                                    {{ file.description }}
                                 </div>
                             </v-card-text>
                             <v-spacer></v-spacer>
+                            <div class="px-3">
+                                <v-chip class="ma-1 pa-2" v-for="c in file.categories" v-bind:key="c" small>{{ c }}
+                                </v-chip>
+                            </div>
                             <v-card-actions>
                                 <v-btn text color="teal accent-4" :href="file.download" download>Herunterladen</v-btn>
                                 <v-btn text color="teal accent-4" @click="">Löschen</v-btn>
@@ -89,12 +91,25 @@
                                     Neue Datei hochladen...
                                 </v-card-title>
                                 <v-card-text>
-                                    <v-file-input accept="image/*" label="File input"></v-file-input>
+                                    <v-textarea v-model="newFileDescription" counter="200" counter rows="4"
+                                        label="Beschreibung">
+                                    </v-textarea>
+                                    <v-combobox v-model="newFileCategories" :items="items" chips clearable
+                                        label="Kategorien" multiple prepend-icon="mdi-filter-variant" solo>
+                                        <template v-slot:selection="{ attrs, item, select, selected }">
+                                            <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                                @click:close="removeNewFileCategory(item)">
+                                                {{ item }}
+                                            </v-chip>
+                                        </template>
+                                    </v-combobox>
+                                    <v-file-input v-model="newFile" show-size required truncate-length="18" accept="*/*"
+                                        label="Dateiauswahl"></v-file-input>
                                 </v-card-text>
                                 <v-divider></v-divider>
                                 <v-card-actions>
                                     <v-spacer></v-spacer>
-                                    <v-btn color="primary" text @click="showUploadDialog = false">
+                                    <v-btn color="primary" text @click="uploadFiles">
                                         Hochladen
                                     </v-btn>
                                 </v-card-actions>
@@ -126,9 +141,13 @@
             el: '#app',
             vuetify: new Vuetify(),
             methods: {
-                remove: function (item) {
+                removeCategory: function (item) {
                     this.chosenCategories.splice(this.chosenCategories.indexOf(item), 1)
                     this.chosenCategories = [...this.chosenCategories]
+                },
+                removeNewFileCategory: function (item) {
+                    this.newFileCategories.splice(this.newFileCategories.indexOf(item), 1)
+                    this.newFileCategories = [...this.newFileCategories]
                 },
                 loadCategories: function () {
                     console.log('Loading categories from server...');
@@ -140,7 +159,35 @@
                         .catch(err => {
                             console.log(err);
                         });
-                }
+                },
+                uploadFiles: function () {
+                    // Source: https://stackoverflow.com/a/57777572
+                    let formData = new FormData()
+                    if (this.newFile) {
+                        // add file itself 
+                        formData.append("file", this.newFile, this.newFile.name)
+
+                        // add description and categories
+                        formData.append("description", this.newFileDescription);
+                        formData.append("categories", JSON.stringify(this.newFileCategories));
+
+                        axios
+                            .post("/files", formData)
+                            .then(response => {
+                                console.log("Success!");
+                                console.log({ response });
+                            })
+                            .catch(error => {
+                                console.log({ error });
+                            });
+                    } else {
+                        console.log("No files were chosen!");
+                    }
+                    this.newFileDescription = '';
+                    this.newFileCategories = [];
+                    this.newFile = null;
+                    this.showUploadDialog = false;
+                },
             },
             mounted() {
                 this.loadCategories();
@@ -172,6 +219,9 @@
                 chosenCategories: [],
                 items: [],
                 storedFiles: [],
+                newFileDescription: '',
+                newFileCategories: [],
+                newFile: null,
             },
 
         })

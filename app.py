@@ -14,10 +14,10 @@ Sources:
 """
 
 
-from flask import Flask, render_template, request, current_app
+from flask import Flask, request, current_app
 
 import config
-from model import db, Category, CategoryType
+from model import db, File, Category, FileCategory, CategoryType, initializeCategories
 
 
 def init_app():
@@ -31,7 +31,6 @@ def init_app():
     db.init_app(app)
     with app.app_context():
         db.create_all()
-        from model import initializeCategories
         initializeCategories()
         return app
 
@@ -57,43 +56,13 @@ def categories():
         pass
 
 
-@app.route('/filelist', methods=['POST'])
+@app.route('/files/filter', methods=['POST'])
 def list_participants():
     chosenCategories = request.json['categories']
-    print(chosenCategories)
-    allFiles =[
-        {
-            'filename': 'datei1.jpg',
-                        'description': 'Ein Bild eines kleinen Hundes.',
-                        'categories': ['Arbeitsblätter', 'Grundschule']
-        },
-        {
-            'filename': 'datei2.pdf',
-                        'description': 'Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze.',
-                        'categories': ['Info-Texte', 'Realschule']
-        },
-        {
-            'filename': 'ein_langer_dateiname_vom_benutzer.odt',
-                        'description': 'Eine lange Datei.',
-                        'categories': ['Arbeitsblätter', 'Berufsschule']
-        },
-        {
-            'filename': 'ein_benutzer.odt',
-                        'description': 'Eine llkdfjg lsfdgjklsfjd klgjslfdk glksfd klgjlksdfg kldsfklange Datei.',
-                        'categories': ['Info-Texte', 'Grundschule']
-        },
-        {
-            'filename': 'dateiname_xyz.odt',
-                        'description': 'Eine sklgfjdgl jslkdfj gljlkfsdjg lksjdflkgj klsdfjglksdfklgj lksdfjklg lange Datei.',
-                        'categories': ['Info-Texte', 'Berufsschule']
-        },
-        {
-            'filename': 'Arbeitsblatt.pdf',
-                        'description': 'Eine lange Datei.',
-                        'categories': ['Ergebnissicherung', 'Realschule']
-        }
-    ]
-    return  {'storedFiles': [f for f in allFiles if chosenCategories[0] in f['categories']]}
+    print(chosenCategories[0])
+    filteredList = File.query.join(FileCategory).join(Category).filter(Category.name == chosenCategories[0])
+    allFiles = [{'id': f.id, 'filename': f.filename, 'description': f.description, 'categories': [c.name for c in f.categories]} for f in filteredList]
+    return  {'storedFiles': allFiles}
 
 
 if __name__ == "__main__":

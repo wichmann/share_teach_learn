@@ -55,7 +55,7 @@
                 <v-container>
                     <v-row>
                         <v-card class="ma-3 d-flex flex-column" width="350" v-for="file in storedFiles"
-                            v-bind:key="file.filename"
+                            v-bind:key="file.id"
                             v-if="file.description.includes(searchText) || file.filename.includes(searchText)">
                             <v-card-text>
                                 <!--div>Datei</div-->
@@ -149,7 +149,7 @@
                         this.storedFiles = [];
                     }
                     else {
-                        axios.post('/filelist', {
+                        axios.post('/files/filter', {
                             'categories': this.chosenCategories
                         })
                             .then(response => {

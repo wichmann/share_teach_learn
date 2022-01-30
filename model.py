@@ -13,36 +13,55 @@ class CategoryType(enum.Enum):
     classes = 3
     subjects = 4
 
-FileCategory = db.Table('FileCategory',
-    db.Column('id', db.Integer, primary_key=True),
-    db.Column('fileId', db.Integer, db.ForeignKey('File.id')),
-    db.Column('categoryId', db.Integer, db.ForeignKey('Category.id')))
-
 class Category(db.Model):
     __tablename__ = 'Category'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     type = db.Column(db.Enum(CategoryType))
-    files = db.relationship('File', secondary=FileCategory, viewonly=True)#, backref='Category'
+    files = db.relationship('File', secondary='FileCategory', back_populates='categories') #, back_populates='Category.')#, backref='Category'
 
 class File(db.Model):
     __tablename__ = 'File'
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(256), nullable=False)
     description = db.Column(db.String(256), nullable=True)
-    categories = db.relationship('Category', secondary=FileCategory, viewonly=True)#, backref='File'
+    categories = db.relationship('Category', secondary='FileCategory', back_populates='files') #, lazy='subquery', backref=db.backref('files', lazy=True))
+
+FileCategory = db.Table('FileCategory',
+    db.Column('id', db.Integer, primary_key=True),
+    db.Column('fileId', db.Integer, db.ForeignKey('File.id')),
+    db.Column('categoryId', db.Integer, db.ForeignKey('Category.id')))
+
 
 def initializeCategories():
-    db.session.add(Category(name='Arbeitsblätter', type=CategoryType.contentTypes))
-    db.session.add(Category(name='Info-Texte', type=CategoryType.contentTypes))
-    db.session.add(Category(name='Ergebnissicherung', type=CategoryType.contentTypes))
-    db.session.add(Category(name='Grundschule', type=CategoryType.schoolTypes))
-    db.session.add(Category(name='Realschule', type=CategoryType.schoolTypes))
-    db.session.add(Category(name='Hauptschule', type=CategoryType.schoolTypes))
-    db.session.add(Category(name='Berufsschule', type=CategoryType.schoolTypes))
-    db.session.add(Category(name='Politik', type=CategoryType.subjects))
-    db.session.add(Category(name='Deutsch', type=CategoryType.subjects))
-    db.session.add(Category(name='Informatik', type=CategoryType.subjects))
-    db.session.add(Category(name='Englisch', type=CategoryType.subjects))
+    c1 = Category(name='Arbeitsblätter', type=CategoryType.contentTypes)
+    db.session.add(c1)
+    c2 = Category(name='Info-Texte', type=CategoryType.contentTypes)
+    db.session.add(c2)
+    c3 = Category(name='Ergebnissicherung', type=CategoryType.contentTypes)
+    db.session.add(c3)
+    c4 = Category(name='Grundschule', type=CategoryType.schoolTypes)
+    db.session.add(c4)
+    c5 = Category(name='Realschule', type=CategoryType.schoolTypes)
+    db.session.add(c5)
+    c6 = Category(name='Hauptschule', type=CategoryType.schoolTypes)
+    db.session.add(c6)
+    c7 = Category(name='Berufsschule', type=CategoryType.schoolTypes)
+    db.session.add(c7)
+    c8 = Category(name='Politik', type=CategoryType.subjects)
+    db.session.add(c8)
+    c9 = Category(name='Deutsch', type=CategoryType.subjects)
+    db.session.add(c9)
+    c10 = Category(name='Informatik', type=CategoryType.subjects)
+    db.session.add(c10)
+    c11 = Category(name='Englisch', type=CategoryType.subjects)
+    db.session.add(c11)
     # 'classes': ['Klasse 1', 'Klasse 2', 'Klasse 3', 'Klasse 4']
+    #
+    db.session.add(File(filename='datei1.jpg', description='Ein Bild eines kleinen Hundes.',categories=[c1, c4]))
+    db.session.add(File(filename='datei2.pdf', description='Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze.',categories=[c2, c5]))
+    db.session.add(File(filename='ein_langer_dateiname_vom_benutzer.odt', description='Eine lange Datei.', categories=[c1, c7]))
+    db.session.add(File(filename='ein_benutzer.odt', description='Eine llkdfjg lsfdgjklsfjd klgjslfdk glksfd klgjlksdfg kldsfklange Datei.',categories=[c2, c4]))
+    db.session.add(File(filename='dateiname_xyz.odt', description='Eine sklgfjdgl jslkdfj gljlkfsdjg lksjdflkgj klsdfjglksdfklgj lksdfjklg lange Datei.', categories=[c2, c7]))
+    db.session.add(File(filename='Arbeitsblatt.pdf', description='Eine lange Datei.', categories=[c3, c5]))
     db.session.commit()

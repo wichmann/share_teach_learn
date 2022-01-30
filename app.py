@@ -40,7 +40,7 @@ def init_app():
     # initialize thumbnail generator
     cache_path = '/tmp/preview_cache'
     global preview_manager
-    preview_manager = PreviewManager(cache_path, create_folder= True)
+    preview_manager = PreviewManager(cache_path, create_folder=True)
 
     db.init_app(app)
     with app.app_context():
@@ -74,11 +74,13 @@ def categories():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in config.ALLOWED_EXTENSIONS
 
+
 def get_file_extension(filename):
-        if '.' in filename:
-            return filename.rsplit('.', 1)[1].lower()
-        else:
-            return ''
+    if '.' in filename:
+        return filename.rsplit('.', 1)[1].lower()
+    else:
+        return ''
+
 
 @app.route('/files', methods=['POST'])
 def upload_file():
@@ -124,24 +126,11 @@ def send_previews(uuid):
     result = File.query.filter_by(uuid=uuid).first()
     if result:
         try:
-            path_to_preview_image = preview_manager.get_jpeg_preview(os.path.join(app.config['UPLOAD_FOLDER'], uuid), width=512, height=512)
+            path_to_preview_image = preview_manager.get_jpeg_preview(
+                os.path.join(app.config['UPLOAD_FOLDER'], uuid), width=config.PREVIEW_WIDTH, height=config.PREVIEW_HEIGHT)
             return send_file(path_to_preview_image)
         except FileNotFoundError:
             pass
-        #extension = get_file_extension(result.filename)
-        # trying if file is an image file
-        #try: 
-        #    # Source: https://stackoverflow.com/a/10170635
-        #    image = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], uuid))
-        #    image.thumbnail((512, 512))
-        #    img_io = BytesIO()
-        #    image.save(img_io, 'JPEG', quality=70)
-        #    img_io.seek(0)
-        #    return send_file(img_io, mimetype='image/jpeg')
-        #except IOError:
-        #    print(f'Could not create thumbnail for file "{result.filename}"')
-        # make thumbnail for pdf
-        # ....
     return current_app.send_static_file('images/defaultpreview.png')
 
 

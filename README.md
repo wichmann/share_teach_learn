@@ -14,6 +14,7 @@ Or run the App directly in the pipenv:
 ## Requirements
 * flask
 * flask-sqlalchemy
+* preview-generator (https://github.com/algoo/preview-generator)
 
 ## Development Requirements
 * pipenv

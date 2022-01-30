@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>...share_teach_learn...</title>
+    <!-- development version, includes helpful console warnings -->
+    <!--script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script-->
+    <!-- production version, optimized for size and speed -->
+    <!-- script src="https://cdn.jsdelivr.net/npm/vue@2"></script -->
+    <!--link href="https://cdn.jsdelivr.net/npm/quasar@2.4.13/dist/quasar.prod.css" rel="stylesheet" type="text/css"-->
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-app-bar app>
+                <h1>share_teach_learn <v-icon>mdi-share-variant </v-icon> <v-icon>mdi-bulletin-board</v-icon> <v-icon>mdi-school</v-icon></h1>
+            </v-app-bar>
+            <v-main>
+                <v-container>
+                    <v-row class="text-h3 my-4">
+                        {{ header }}
+                    </v-row>
+
+                    <v-combobox v-model="chips" :items="items" chips clearable label="Kategorien" multiple
+                        prepend-icon="mdi-filter-variant" solo>
+                        <template v-slot:selection="{ attrs, item, select, selected }">
+                            <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                @click:close="remove(item)">
+                                {{ item }}
+                            </v-chip>
+                        </template>
+                    </v-combobox>
+
+                    <v-row>
+                        <v-text-field label="Suchbegriff" v-model="searchText" outlined clearable>
+                        </v-text-field>
+                        <!--p>Alle hochgeladenen Dateien<span v-if="searchText"> mit dem Suchtext '{{ searchText }}'</span-->
+                    </v-row>
+
+                    </p>
+                </v-container>
+                <v-container>
+                    <v-row>
+                        <v-card class="ma-3 d-flex flex-column" width="350" v-for="file in storedFiles"
+                            v-bind:key="file.filename"
+                            v-if="file.description.includes(searchText) || file.filename.includes(searchText)">
+                            <v-card-text>
+                                <!--div>Datei</div-->
+                                <p class="text-h5 text--primary">
+                                    {{ file.filename }}
+                                </p>
+                                <div class="text--primary">
+                                    {{ file.description }}
+                                </div>
+                            </v-card-text>
+                            <v-spacer></v-spacer>
+                            <v-card-actions>
+                                <v-btn text color="teal accent-4" @click="reveal = true">Herunterladen</v-btn>
+                                <v-btn text color="teal accent-4" @click="reveal = true">Löschen</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-row>
+                    <v-row>
+                        <v-dialog v-model="showUploadDialog" width="500">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn class="ml-auto" fab dark color="green" elevation="8" v-bind="attrs" v-on="on">
+                                    <v-icon>mdi-plus</v-icon>
+                                </v-btn>
+                            </template>
+
+                            <v-card>
+                                <v-card-title class="text-h5 grey lighten-2">
+                                    Neue Datei hochladen...
+                                </v-card-title>
+                                <v-card-text>
+                                    <v-file-input accept="image/*" label="File input"></v-file-input>
+                                </v-card-text>
+                                <v-divider></v-divider>
+                                <v-card-actions>
+                                    <v-spacer></v-spacer>
+                                    <v-btn color="primary" text @click="showUploadDialog = false">
+                                        Hochladen
+                                    </v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </v-dialog>
+                    </v-row>
+                </v-container>
+
+            </v-main>
+            <v-footer app>
+                <v-container class="text-center">
+                <v-icon>mdi-copyright</v-icon>
+                Christian Wichmann, 2022</v-container>
+            </v-footer>
+        </v-app>
+ 
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script>
+        // register modal component
+        Vue.component("modal", {
+            template: "#modal-template"
+        }); 
+        var app = new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            methods: {
+                remove: function(item) {
+                    this.chips.splice(this.chips.indexOf(item), 1)
+                    this.chips = [...this.chips]
+                },
+            },
+            data: {
+                header: 'Open Educational Ressources',
+                searchText: '',
+                showUploadDialog: false,
+                chips: [],
+                items: ['Streaming', 'Eating', 'Programming', 'Playing video games', 'Watching movies', 'Sleeping'],
+                storedFiles: [
+                    {
+                        filename: 'datei1.jpg',
+                        description: 'Ein Bild eines kleinen Hundes.'
+                    },
+                    {
+                        filename: 'datei2.pdf',
+                        description: 'Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze.'
+                    },
+                    {
+                        filename: 'ein_langer_dateiname_vom_benutzer.odt',
+                        description: 'Eine lange Datei.'
+                    },
+                    {
+                        filename: 'ein_benutzer.odt',
+                        description: 'Eine llkdfjg lsfdgjklsfjd klgjslfdk glksfd klgjlksdfg kldsfklange Datei.'
+                    },
+                    {
+                        filename: 'dateiname_xyz.odt',
+                        description: 'Eine sklgfjdgl jslkdfj gljlkfsdjg lksjdflkgj klsdfjglksdfklgj lksdfjklg lange Datei.'
+                    },
+                    {
+                        filename: 'Arbeitsblatt.pdf',
+                        description: 'Eine lange Datei.'
+                    }
+                ]
+            },
+
+        })
+
+    </script>
+</body>
+
+</html>

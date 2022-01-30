@@ -57,12 +57,20 @@ def categories():
 
 
 @app.route('/files/filter', methods=['POST'])
-def list_participants():
+def filter_files():
     chosenCategories = request.json['categories']
     print(chosenCategories[0])
     filteredList = File.query.join(FileCategory).join(Category).filter(Category.name == chosenCategories[0])
-    allFiles = [{'id': f.id, 'filename': f.filename, 'description': f.description, 'categories': [c.name for c in f.categories]} for f in filteredList]
+    allFiles = [{'id': f.id, 'filename': f.filename, 'description': f.description,
+                 'preview': f'/files/preview/{f.uuid}',
+                 'categories': [c.name for c in f.categories]} for f in filteredList]
     return  {'storedFiles': allFiles}
+
+
+@app.route('/files/preview/<uuid>', methods=['GET'])
+def send_previews(uuid):
+    print(f'Sending preview for {uuid}')
+    return current_app.send_static_file('images/defaultpreview.png')
 
 
 if __name__ == "__main__":

@@ -58,18 +58,21 @@
                             v-bind:key="file.id"
                             v-if="file.description.includes(searchText) || file.filename.includes(searchText)">
                             <v-card-text>
-                                <!--div>Datei</div-->
+                                <div> <img :src="file.preview" width="300" height="300"> </div>
                                 <p class="text-h5 text--primary">
                                     {{ file.filename }}
                                 </p>
                                 <div class="text--primary">
                                     {{ file.description }}
                                 </div>
+                                <div class="mt-auto">
+                                    <v-chip v-for="c in file.categories" v-bind:key="c" small >{{ c }}</v-chip>
+                                </div>
                             </v-card-text>
                             <v-spacer></v-spacer>
                             <v-card-actions>
-                                <v-btn text color="teal accent-4" @click="reveal = true">Herunterladen</v-btn>
-                                <v-btn text color="teal accent-4" @click="reveal = true">Löschen</v-btn>
+                                <v-btn text color="teal accent-4" @click="">Herunterladen</v-btn>
+                                <v-btn text color="teal accent-4" @click="">Löschen</v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-row>

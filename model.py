@@ -1,5 +1,6 @@
 
-import enum 
+import uuid
+import enum
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -13,6 +14,7 @@ class CategoryType(enum.Enum):
     classes = 3
     subjects = 4
 
+
 class Category(db.Model):
     __tablename__ = 'Category'
     id = db.Column(db.Integer, primary_key=True)
@@ -20,12 +22,15 @@ class Category(db.Model):
     type = db.Column(db.Enum(CategoryType))
     files = db.relationship('File', secondary='FileCategory', back_populates='categories') #, back_populates='Category.')#, backref='Category'
 
+
 class File(db.Model):
     __tablename__ = 'File'
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(256), nullable=False)
     description = db.Column(db.String(256), nullable=True)
+    uuid = db.Column(db.String(40), unique=True)
     categories = db.relationship('Category', secondary='FileCategory', back_populates='files') #, lazy='subquery', backref=db.backref('files', lazy=True))
+
 
 FileCategory = db.Table('FileCategory',
     db.Column('id', db.Integer, primary_key=True),
@@ -58,10 +63,16 @@ def initializeCategories():
     db.session.add(c11)
     # 'classes': ['Klasse 1', 'Klasse 2', 'Klasse 3', 'Klasse 4']
     #
-    db.session.add(File(filename='datei1.jpg', description='Ein Bild eines kleinen Hundes.',categories=[c1, c4]))
-    db.session.add(File(filename='datei2.pdf', description='Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze.',categories=[c2, c5]))
-    db.session.add(File(filename='ein_langer_dateiname_vom_benutzer.odt', description='Eine lange Datei.', categories=[c1, c7]))
-    db.session.add(File(filename='ein_benutzer.odt', description='Eine llkdfjg lsfdgjklsfjd klgjslfdk glksfd klgjlksdfg kldsfklange Datei.',categories=[c2, c4]))
-    db.session.add(File(filename='dateiname_xyz.odt', description='Eine sklgfjdgl jslkdfj gljlkfsdjg lksjdflkgj klsdfjglksdfklgj lksdfjklg lange Datei.', categories=[c2, c7]))
-    db.session.add(File(filename='Arbeitsblatt.pdf', description='Eine lange Datei.', categories=[c3, c5]))
+    new_uuid = uuid.uuid4()
+    db.session.add(File(filename='datei1.jpg', uuid=new_uuid.hex, description='Ein Bild eines kleinen Hundes.',categories=[c1, c4]))
+    new_uuid = uuid.uuid4()
+    db.session.add(File(filename='datei2.pdf', uuid=new_uuid.hex, description='Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze.',categories=[c2, c5]))
+    new_uuid = uuid.uuid4()
+    db.session.add(File(filename='ein_langer_dateiname_vom_benutzer.odt', uuid=new_uuid.hex, description='Eine lange Datei.', categories=[c1, c7]))
+    new_uuid = uuid.uuid4()
+    db.session.add(File(filename='ein_benutzer.odt', uuid=new_uuid.hex, description='Eine llkdfjg lsfdgjklsfjd klgjslfdk glksfd klgjlksdfg kldsfklange Datei.',categories=[c2, c4]))
+    new_uuid = uuid.uuid4()
+    db.session.add(File(filename='dateiname_xyz.odt', uuid=new_uuid.hex, description='Eine sklgfjdgl jslkdfj gljlkfsdjg lksjdflkgj klsdfjglksdfklgj lksdfjklg lange Datei.', categories=[c2, c7]))
+    new_uuid = uuid.uuid4()
+    db.session.add(File(filename='Arbeitsblatt.pdf', uuid=new_uuid.hex, description='Eine lange Datei.', categories=[c3, c5]))
     db.session.commit()

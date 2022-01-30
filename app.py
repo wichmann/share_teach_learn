@@ -2,8 +2,7 @@
 """
 stl - share_teach_learn
 
-Sharing network site to upload teaching resources to share it with other
-teachers in the world.
+Site to upload teaching resources to share it with other teachers in the world.
 
 Requirements:
 * flask
@@ -140,8 +139,12 @@ def send_file_content(uuid):
         result = File.query.filter_by(uuid=uuid).first()
         if result:
             print(f'Sending file for {uuid}')
-            return send_file(os.path.join(app.config['UPLOAD_FOLDER'], uuid),
-                             download_name=result.filename)
+            # TODO: Handle errors better and show error message in UI.
+            path = os.path.join(app.config['UPLOAD_FOLDER'], uuid)
+            if os.path.exists(path):
+                return send_file(path, download_name=result.filename)
+            else:
+                return abort(404)
         else:
             # TODO: Check status code.
             abort(400)

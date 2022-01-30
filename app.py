@@ -16,9 +16,12 @@ Sources:
 import os
 import uuid
 import json
+from PIL import Image
+from io import StringIO, BytesIO
 
 from werkzeug.utils import secure_filename
 from flask import Flask, request, current_app, abort, jsonify, send_file
+from preview_generator.manager import PreviewManager
 
 import config
 from model import db, File, Category, FileCategory, CategoryType, initializeCategories
@@ -33,6 +36,11 @@ def init_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     UPLOAD_FOLDER = './uploads'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+    # initialize thumbnail generator
+    cache_path = '/tmp/preview_cache'
+    global preview_manager
+    preview_manager = PreviewManager(cache_path, create_folder= True)
 
     db.init_app(app)
     with app.app_context():
@@ -63,13 +71,18 @@ def categories():
         pass
 
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in config.ALLOWED_EXTENSIONS
+
+def get_file_extension(filename):
+        if '.' in filename:
+            return filename.rsplit('.', 1)[1].lower()
+        else:
+            return ''
+
 @app.route('/files', methods=['POST'])
 def upload_file():
     print('Uploading file...')
-
-    def allowed_file(filename):
-        ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
     if 'file' not in request.files:
         return abort(400)
     file = request.files['file']
@@ -108,6 +121,27 @@ def filter_files():
 @app.route('/files/<uuid>/preview', methods=['GET'])
 def send_previews(uuid):
     print(f'Sending preview for {uuid}')
+    result = File.query.filter_by(uuid=uuid).first()
+    if result:
+        try:
+            path_to_preview_image = preview_manager.get_jpeg_preview(os.path.join(app.config['UPLOAD_FOLDER'], uuid), width=512, height=512)
+            return send_file(path_to_preview_image)
+        except FileNotFoundError:
+            pass
+        #extension = get_file_extension(result.filename)
+        # trying if file is an image file
+        #try: 
+        #    # Source: https://stackoverflow.com/a/10170635
+        #    image = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], uuid))
+        #    image.thumbnail((512, 512))
+        #    img_io = BytesIO()
+        #    image.save(img_io, 'JPEG', quality=70)
+        #    img_io.seek(0)
+        #    return send_file(img_io, mimetype='image/jpeg')
+        #except IOError:
+        #    print(f'Could not create thumbnail for file "{result.filename}"')
+        # make thumbnail for pdf
+        # ....
     return current_app.send_static_file('images/defaultpreview.png')
 
 

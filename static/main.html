@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>...share_teach_learn...</title>
+    <title>share_teach_learn</title>
     <!-- development version, includes helpful console warnings -->
     <!--script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script-->
     <!-- production version, optimized for size and speed -->
@@ -13,7 +13,9 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="style.css" />
+
+    <link rel="stylesheet" type="text/css" href="static/css/style.css">
+    <link rel="shortcut icon" href="static/images/favicon.ico" type="image/x-icon" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 </head>
@@ -22,7 +24,10 @@
     <div id="app">
         <v-app>
             <v-app-bar app>
-                <h1>share_teach_learn <v-icon>mdi-share-variant </v-icon> <v-icon>mdi-bulletin-board</v-icon> <v-icon>mdi-school</v-icon></h1>
+                <h1>share_teach_learn <v-icon>mdi-share-variant </v-icon>
+                    <v-icon>mdi-bulletin-board</v-icon>
+                    <v-icon>mdi-school</v-icon>
+                </h1>
             </v-app-bar>
             <v-main>
                 <v-container>
@@ -30,7 +35,7 @@
                         {{ header }}
                     </v-row>
 
-                    <v-combobox v-model="chips" :items="items" chips clearable label="Kategorien" multiple
+                    <v-combobox v-model="chosenCategories" :items="items" chips clearable label="Kategorien" multiple
                         prepend-icon="mdi-filter-variant" solo>
                         <template v-slot:selection="{ attrs, item, select, selected }">
                             <v-chip v-bind="attrs" :input-value="selected" close @click="select"
@@ -41,9 +46,8 @@
                     </v-combobox>
 
                     <v-row>
-                        <v-text-field label="Suchbegriff" v-model="searchText" outlined clearable>
+                        <v-text-field label="Suchbegriff" v-model="searchText" solo clearable>
                         </v-text-field>
-                        <!--p>Alle hochgeladenen Dateien<span v-if="searchText"> mit dem Suchtext '{{ searchText }}'</span-->
                     </v-row>
 
                     </p>
@@ -99,61 +103,72 @@
             </v-main>
             <v-footer app>
                 <v-container class="text-center">
-                <v-icon>mdi-copyright</v-icon>
-                Christian Wichmann, 2022</v-container>
+                    <v-icon>mdi-copyright</v-icon>
+                    Christian Wichmann, 2022
+                </v-container>
             </v-footer>
         </v-app>
- 
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         // register modal component
-        Vue.component("modal", {
-            template: "#modal-template"
-        }); 
+        Vue.component('modal', {
+            template: '#modal-template'
+        });
         var app = new Vue({
             el: '#app',
             vuetify: new Vuetify(),
             methods: {
-                remove: function(item) {
-                    this.chips.splice(this.chips.indexOf(item), 1)
-                    this.chips = [...this.chips]
+                remove: function (item) {
+                    this.chosenCategories.splice(this.chosenCategories.indexOf(item), 1)
+                    this.chosenCategories = [...this.chosenCategories]
                 },
+                loadCategories: function () {
+                    console.log('Loading categories from server...');
+                    axios.get('/categories')
+                        .then(response => {
+                            console.log(response);
+                            this.items = response.data.contentTypes.concat(response.data.classes).concat(response.data.schoolTypes).concat(response.data.subjects);
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        });
+                }
+            },
+            mounted() {
+                this.loadCategories();
+            },
+            watch: {
+                chosenCategories: function (val) {
+                    console.log('Categories changed...');
+                    if (this.chosenCategories.length === 0) {
+                        this.storedFiles = [];
+                    }
+                    else {
+                        axios.post('/filelist', {
+                            'categories': this.chosenCategories
+                        })
+                            .then(response => {
+                                console.log(response);
+                                this.storedFiles = response.data.storedFiles;
+                            })
+                            .catch(err => {
+                                console.log(err);
+                            });
+                    }
+                }
             },
             data: {
                 header: 'Open Educational Ressources',
                 searchText: '',
                 showUploadDialog: false,
-                chips: [],
-                items: ['Streaming', 'Eating', 'Programming', 'Playing video games', 'Watching movies', 'Sleeping'],
-                storedFiles: [
-                    {
-                        filename: 'datei1.jpg',
-                        description: 'Ein Bild eines kleinen Hundes.'
-                    },
-                    {
-                        filename: 'datei2.pdf',
-                        description: 'Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze. Ein Dokument mit einer Katze.'
-                    },
-                    {
-                        filename: 'ein_langer_dateiname_vom_benutzer.odt',
-                        description: 'Eine lange Datei.'
-                    },
-                    {
-                        filename: 'ein_benutzer.odt',
-                        description: 'Eine llkdfjg lsfdgjklsfjd klgjslfdk glksfd klgjlksdfg kldsfklange Datei.'
-                    },
-                    {
-                        filename: 'dateiname_xyz.odt',
-                        description: 'Eine sklgfjdgl jslkdfj gljlkfsdjg lksjdflkgj klsdfjglksdfklgj lksdfjklg lange Datei.'
-                    },
-                    {
-                        filename: 'Arbeitsblatt.pdf',
-                        description: 'Eine lange Datei.'
-                    }
-                ]
+                chosenCategories: [],
+                items: [],
+                storedFiles: [],
             },
 
         })

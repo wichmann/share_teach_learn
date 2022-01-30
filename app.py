@@ -66,6 +66,7 @@ def categories():
 @app.route('/files', methods=['POST'])
 def upload_file():
     print('Uploading file...')
+
     def allowed_file(filename):
         ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -97,7 +98,7 @@ def filter_files():
     # TODO: Add pagination.
     filteredList = File.query.join(FileCategory).join(
         Category).filter(Category.name.in_(chosenCategories))
-    allFiles = [{'id': f.id, 'filename': f.filename, 'description': f.description,
+    allFiles = [{'id': f.uuid, 'filename': f.filename, 'description': f.description,
                  'preview': f'/files/{f.uuid}/preview',
                  'download': f'/files/{f.uuid}',
                  'categories': [c.name for c in f.categories]} for f in filteredList]
@@ -122,9 +123,19 @@ def send_file_content(uuid):
             # TODO: Check status code.
             abort(400)
     elif request.method == 'DELETE':
-        # TODO: Implement deletion of files.
-        print('Error: Not yet implemented!')
-        return abort(405)
+        result = File.query.filter_by(uuid=uuid).first()
+        if result:
+            print(f'Deleting file for {uuid}')
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], uuid))
+            except FileNotFoundError as e:
+                print(e)
+            db.session.delete(result)
+            db.session.commit()
+            return jsonify({'success': True}), 200
+        else:
+            # TODO: Check status code.
+            abort(400)
 
 
 if __name__ == "__main__":

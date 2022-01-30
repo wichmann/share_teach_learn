@@ -25,10 +25,11 @@
         <v-app>
             <v-app-bar app>
                 <a href="/">
-                <h1>share_teach_learn <v-icon>mdi-share-variant </v-icon>
-                    <v-icon>mdi-bulletin-board</v-icon>
-                    <v-icon>mdi-school</v-icon>
-                </h1></a>
+                    <h1>share_teach_learn <v-icon>mdi-share-variant </v-icon>
+                        <v-icon>mdi-bulletin-board</v-icon>
+                        <v-icon>mdi-school</v-icon>
+                    </h1>
+                </a>
             </v-app-bar>
             <v-main>
                 <v-container>
@@ -74,7 +75,7 @@
                             </div>
                             <v-card-actions>
                                 <v-btn text color="teal accent-4" :href="file.download" download>Herunterladen</v-btn>
-                                <v-btn text color="teal accent-4" @click="">Löschen</v-btn>
+                                <v-btn text color="teal accent-4" @click="deleteFile(file)">Löschen</v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-row>
@@ -188,6 +189,30 @@
                     this.newFile = null;
                     this.showUploadDialog = false;
                 },
+                deleteFile: function (file) {
+                    console.log('Deleting file: ' + file.filename + ', ' + file.id)
+                    axios.delete("/files/" + file.id)
+                        .then(response => {
+                            console.log("Success!");
+                            console.log({ response });
+                        })
+                        .catch(error => {
+                            console.log({ error });
+                        });
+                    this.updateFileList();
+                },
+                updateFileList: function () {
+                    axios.post('/files/filter', {
+                        'categories': this.chosenCategories
+                    })
+                        .then(response => {
+                            console.log(response);
+                            this.storedFiles = response.data.storedFiles;
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        });
+                },
             },
             mounted() {
                 this.loadCategories();
@@ -199,16 +224,7 @@
                         this.storedFiles = [];
                     }
                     else {
-                        axios.post('/files/filter', {
-                            'categories': this.chosenCategories
-                        })
-                            .then(response => {
-                                console.log(response);
-                                this.storedFiles = response.data.storedFiles;
-                            })
-                            .catch(err => {
-                                console.log(err);
-                            });
+                        this.updateFileList();
                     }
                 }
             },

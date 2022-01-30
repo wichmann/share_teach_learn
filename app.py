@@ -38,6 +38,7 @@ def init_app():
 app = init_app()
 
 
+# TODO: Check whether to use a /v1/ path element!?
 @app.route('/', methods=['GET'])
 def info():
     return current_app.send_static_file('main.html')
@@ -62,15 +63,26 @@ def filter_files():
     print(chosenCategories[0])
     filteredList = File.query.join(FileCategory).join(Category).filter(Category.name == chosenCategories[0])
     allFiles = [{'id': f.id, 'filename': f.filename, 'description': f.description,
-                 'preview': f'/files/preview/{f.uuid}',
+                 'preview': f'/files/{f.uuid}/preview',
+                 'download': f'/files/{f.uuid}',
                  'categories': [c.name for c in f.categories]} for f in filteredList]
     return  {'storedFiles': allFiles}
 
 
-@app.route('/files/preview/<uuid>', methods=['GET'])
+@app.route('/files/<uuid>/preview', methods=['GET'])
 def send_previews(uuid):
     print(f'Sending preview for {uuid}')
     return current_app.send_static_file('images/defaultpreview.png')
+
+
+@app.route('/files/<uuid>', methods=['GET', 'DELETE'])
+def send_file_content(uuid):
+    if request.method == 'GET':
+        print(f'Sending file for {uuid}')
+        return current_app.send_static_file('example.odt')
+    elif request.method == 'DELETE':
+        # TODO: Implement deletion of files.
+        print('Error: Not yet implemented!')
 
 
 if __name__ == "__main__":
